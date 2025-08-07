@@ -1,0 +1,27 @@
+# Google ADK
+google-adk
+
+# MCP SDK for Python
+mcp
+
+# Additional dependencies for MCP integration
+aiohttp
+requests
+pyyaml
+typing-extensions>=4.0.0
+
+# For running shell commands
+asyncio-subprocess-shlex
+
+# For JSON handling
+orjson
+
+# For environment configuration
+python-dotenv
+
+# Development dependencies (optional)
+pytest
+pytest-asyncio
+black
+isort
+mypy

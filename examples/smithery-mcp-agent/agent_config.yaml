@@ -1,0 +1,137 @@
+# Smithery MCP Agent Configuration
+# This file configures the behavior of the Smithery MCP Agent
+
+agent:
+  name: "Smithery MCP Agent"
+  description: "An agent that can discover, install, and use MCP servers via Smithery CLI"
+  version: "1.0.0"
+
+# Model configuration
+model:
+  provider: "google"
+  name: "gemini-1.5-pro"
+  # API key can be set here or via GOOGLE_API_KEY environment variable
+  # api_key: "your-api-key-here"
+  
+  # Model parameters
+  parameters:
+    temperature: 0.7
+    max_tokens: 4096
+    top_p: 0.95
+    top_k: 40
+
+# Smithery CLI configuration
+smithery:
+  # Default client to use for installations
+  default_client: "claude"
+  
+  # Available clients: claude, cursor, cline, vscode, etc.
+  supported_clients:
+    - claude
+    - cursor
+    - cline
+    - vscode
+    - windsurf
+  
+  # Registry API endpoint (if using custom registry)
+  # registry_url: "https://smithery.ai/api"
+  
+  # Cache directory for installed servers
+  cache_dir: "~/.smithery/cache"
+
+# MCP server defaults
+mcp_servers:
+  # Default configuration for MCP servers
+  defaults:
+    # Timeout for server operations (in seconds)
+    timeout: 30
+    
+    # Retry configuration
+    retry:
+      max_attempts: 3
+      delay_seconds: 1
+    
+    # Connection settings
+    connection:
+      transport: "stdio"  # Options: stdio, http, websocket
+      
+  # Pre-configured servers that should be installed on startup
+  preinstalled:
+    - name: "exa"
+      description: "Web search and crawling"
+      config:
+        api_key: "${EXA_API_KEY}"  # Use environment variable
+        
+    - name: "@smithery/files"
+      description: "File system operations"
+      config:
+        allowed_directories:
+          - "~/workspace"
+          - "/tmp"
+
+# Tool execution settings
+tools:
+  # Enable parallel tool execution
+  enable_parallel: true
+  
+  # Maximum number of concurrent tool executions
+  max_concurrent: 5
+  
+  # Tool timeout (in seconds)
+  timeout: 60
+
+# Logging configuration
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Log to file
+  file:
+    enabled: true
+    path: "logs/smithery_mcp_agent.log"
+    max_size_mb: 10
+    backup_count: 3
+
+# Session configuration
+session:
+  # Session storage
+  storage:
+    type: "memory"  # Options: memory, file, database
+    # For file storage:
+    # path: "sessions/"
+    
+  # Session timeout (in minutes)
+  timeout_minutes: 60
+  
+  # Maximum session history
+  max_history: 100
+
+# Security settings
+security:
+  # Allowed domains for web-based MCP servers
+  allowed_domains:
+    - "smithery.ai"
+    - "*.smithery.ai"
+    - "localhost"
+    
+  # Sandbox configuration for tool execution
+  sandbox:
+    enabled: false  # Enable for production
+    allowed_commands:
+      - "npx"
+      - "node"
+      - "npm"
+    
+  # API key validation
+  validate_api_keys: true
+
+# Development settings
+development:
+  # Enable debug mode
+  debug: false
+  
+  # Mock external calls (for testing)
+  mock_external_calls: false
+  
+  # Pretty print outputs
+  pretty_print: true
