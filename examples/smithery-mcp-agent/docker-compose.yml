@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  # Smithery MCP Agent Service
+  smithery-mcp-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smithery-mcp-agent
+    environment:
+      # Pass environment variables
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - EXA_API_KEY=${EXA_API_KEY}
+      - SMITHERY_DEFAULT_CLIENT=${SMITHERY_DEFAULT_CLIENT:-claude}
+      - AGENT_DEBUG=${AGENT_DEBUG:-false}
+      - AGENT_LOG_LEVEL=${AGENT_LOG_LEVEL:-INFO}
+    volumes:
+      # Mount configuration files
+      - ./agent_config.yaml:/app/agent_config.yaml:ro
+      - ./.env:/app/.env:ro
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Mount cache directory for Smithery
+      - smithery_cache:/root/.smithery/cache
+      # Mount MCP server configurations
+      - mcp_configs:/root/.config
+    networks:
+      - agent-network
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  # Optional: Web interface for the agent
+  agent-ui:
+    image: nginx:alpine
+    container_name: smithery-agent-ui
+    volumes:
+      - ./web-ui:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+    networks:
+      - agent-network
+    depends_on:
+      - smithery-mcp-agent
+    profiles:
+      - ui
+
+  # Optional: PostgreSQL for persistent session storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: smithery-postgres
+    environment:
+      POSTGRES_USER: smithery
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smithery123}
+      POSTGRES_DB: smithery_sessions
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - agent-network
+    profiles:
+      - persistent
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: smithery-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - agent-network
+    profiles:
+      - cache
+
+  # Optional: Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: smithery-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - agent-network
+    profiles:
+      - monitoring
+
+  # Optional: Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: smithery-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - agent-network
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+networks:
+  agent-network:
+    driver: bridge
+
+volumes:
+  smithery_cache:
+  mcp_configs:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
