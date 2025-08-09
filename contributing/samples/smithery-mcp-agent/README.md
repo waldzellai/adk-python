@@ -51,8 +51,8 @@ The Smithery MCP Agent showcases:
 ### 1. Clone and Setup
 
 ```bash
-# Navigate to the example directory
-cd examples/smithery-mcp-agent
+# Navigate to the sample directory
+cd contributing/samples/smithery-mcp-agent
 
 # Create a virtual environment
 python -m venv venv
